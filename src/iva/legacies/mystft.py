@@ -78,17 +78,17 @@ def istft(X, win, step):
 #     wavfile = "./townofdeath.wav"
 #     fs, data = read(wavfile)
 #     data = data[:, 0]
-# 
+#
 #     fftLen = 512  # とりあえず
 #     win = np.hamming(fftLen)  # ハミング窓
 #     step = fftLen / 4
-# 
+#
 #     ### STFT
 #     spectrogram = stft(data, win, step)
-# 
+#
 #     ### iSTFT
 #     resyn_data = istft(spectrogram, win, step)
-# 
+#
 #     ### Plot
 #     fig = pl.figure()
 #     fig.add_subplot(311)
@@ -105,4 +105,4 @@ def istft(X, win, step):
 #     pl.xlim([0, len(resyn_data)])
 #     pl.title("Resynthesized signal", fontsize=10)
 #     pl.show()
-# 
+#

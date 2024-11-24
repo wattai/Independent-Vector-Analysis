@@ -3,11 +3,10 @@
 import time
 
 import numpy as np
-import scipy as sp
-from scipy.signal import resample
 import soundfile as sf
 
 from iva.legacies import mystft
+
 
 class IndependentVectorAnalysis:
     def __init__(self, data, num_sources):
@@ -259,6 +258,7 @@ def zca_whitening(x, n_components):
     z = x @ V.T
     return z
 
+
 def multi_stft(data, win, step):
     ### STFT ---------------------------------------------------------
     for i in range(data.shape[1]):
@@ -287,9 +287,7 @@ def multi_istft(rebuild_spectrogram, win, step):
     return resyn_data
 
 
-
 if __name__ == "__main__":
-
     data, samplerate = sf.read("yuki_stereo_VM00_VF00_0750.wav")  # 2人の会話
     iva = IndependentVectorAnalysis(N=5, fftLen=1024, n_components=2, fs=samplerate)
     result = iva.fit_transform(data)
