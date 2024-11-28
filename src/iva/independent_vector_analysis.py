@@ -5,7 +5,7 @@ import time
 import numpy as np
 import soundfile as sf
 
-from iva.legacies import mystft
+from iva.time_frequency_analysis import BaseShortTimeFFT, HammingShortTimeFFT
 
 
 class IndependentVectorAnalysis:
@@ -33,22 +33,24 @@ class _IndependentVectorAnalysis:
     def __init__(
         self,
         num_iterations: int = 10,
-        fft_window_length: int = 128,
         num_components: int = 4,
-        fs: float = 16000,
+        sft: BaseShortTimeFFT = HammingShortTimeFFT(
+            fs=16000, window_length=2048, hop=1024
+        ),
     ):
-        """Independent Vector Analysis
+        """Independent Vector Analysis.
 
         Args:
             num_iterations: The number of the iteration of IVA computaition.
-            fft_window_length : Window length for FFT.
             num_components: The number of source signals.
-            fs: Sampling frequency.
+            sft: An instance of a short-time Fourier transform class.
+
         """
         self.N = num_iterations
-        self.fftLen = fft_window_length
+        self.fftLen = sft.window_length
         self.n_components = num_components
-        self.fs = fs
+        self.fs = sft.fs
+        self.sft = sft
 
         self.W = None  # Separation Matrix
         self.r = None  #
@@ -145,10 +147,6 @@ class _IndependentVectorAnalysis:
 
     def fit_transform(self, data):
         L, sigch = data.shape
-        win = np.hamming(self.fftLen)  # ハミング窓
-        step = (
-            self.fftLen / 2
-        ) / 2  # フレーム窓シフト幅(論文[一般で言われているシフト幅]のもう/2で合致？)
         if self.n_components is None:
             self.n_components = data.shape[1]
         elif self.n_components > data.shape[1]:
@@ -166,7 +164,9 @@ class _IndependentVectorAnalysis:
         elapsed_time2 = time.time() - start - sum_time
 
         # 時間領域 to 時間-周波数領域 --------------------------------------
-        self.spectrogram = multi_stft(whited_data, win, step)  # STFT
+        print(whited_data.shape)
+        self.spectrogram = self.sft.stft(whited_data.transpose(1, 0)).transpose(2, 1, 0)
+        print(self.spectrogram.shape)
         # -----------------------------------------------------------------
         sum_time += elapsed_time2
         elapsed_time3 = time.time() - start - sum_time
@@ -178,7 +178,9 @@ class _IndependentVectorAnalysis:
         elapsed_time4 = time.time() - start - sum_time
 
         # 時間-周波数領域 to 時間領域 --------------------------------------
-        result = multi_istft(self.rebuild_spectrogram, win, step)  # iSTFT
+        result = self.sft.istft(self.rebuild_spectrogram.transpose(2, 1, 0)).transpose(
+            1, 0
+        )
         result = result[
             len(result) - len(whited_data) :, :
         ]  # STFTで生じた余分な信号長のカット
@@ -257,34 +259,6 @@ def zca_whitening(x, n_components):
     # 線形変換z
     z = x @ V.T
     return z
-
-
-def multi_stft(data, win, step):
-    ### STFT ---------------------------------------------------------
-    for i in range(data.shape[1]):
-        if i == 0:
-            buff = mystft.stft(data[:, i], win, step)
-            spectrogram_ = np.empty(
-                [buff.shape[0], buff.shape[1], data.shape[1]], dtype="complex"
-            )
-            spectrogram_[:, :, i] = buff
-        if i > 0:
-            spectrogram_[:, :, i] = mystft.stft(data[:, i], win, step)
-    ### ---------------------------------------------------------------
-    return spectrogram_
-
-
-def multi_istft(rebuild_spectrogram, win, step):
-    ### iSTFT ---------------------------------------------------------
-    for i in range(rebuild_spectrogram.shape[2]):
-        if i == 0:
-            buff = mystft.istft(rebuild_spectrogram[:, :, i], win, step)
-            resyn_data = np.empty([buff.shape[0], rebuild_spectrogram.shape[2]])
-            resyn_data[:, i] = buff
-        if i > 0:
-            resyn_data[:, i] = mystft.istft(rebuild_spectrogram[:, :, i], win, step)
-    ### ---------------------------------------------------------------
-    return resyn_data
 
 
 if __name__ == "__main__":

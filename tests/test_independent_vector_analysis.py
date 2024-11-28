@@ -26,13 +26,11 @@ def test_iva(
     num_components,
     num_iterations,
 ):
-    input, fs = load_dummy_signals()
+    input, _ = load_dummy_signals()
 
     iva = _IndependentVectorAnalysis(
         num_components=num_components,
         num_iterations=num_iterations,
-        fs=fs,
-        fft_window_length=1024,
     )
     out = iva.fit_transform(input)
     print(out)
