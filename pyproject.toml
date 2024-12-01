@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iva"
+dynamic = ["version"]
+authors = [
+    {name = "wattai", email = "evamark.wattai@gmail.com"},
+]
+description = "An implementation of IndependentVectorAnalysis that decompose mixed vector signals into their original sources."
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy~=1.26.4",
+    "scipy~=1.14.1",
+    "numba~=0.60.0",
+    "librosa~=0.10.2.post1",
+]
+[project.optional-dependencies]
+dev = [
+    "pytest~=8.3.3",
+    "pre-commit~=4.0.1",
+    "ruff",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["iva"]
